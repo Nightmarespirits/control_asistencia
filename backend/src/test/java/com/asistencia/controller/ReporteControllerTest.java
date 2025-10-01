@@ -2,6 +2,8 @@ package com.asistencia.controller;
 
 import com.asistencia.dto.ReporteAsistenciaDTO;
 import com.asistencia.dto.ReporteRequestDTO;
+import com.asistencia.entity.Asistencia;
+import com.asistencia.entity.Empleado;
 import com.asistencia.entity.EstadoMarcacion;
 import com.asistencia.entity.TipoMarcacion;
 import com.asistencia.service.ReporteService;
@@ -45,12 +47,30 @@ class ReporteControllerTest {
     
     private ReporteRequestDTO request;
     private ReporteAsistenciaDTO reporteDTO;
+    private Asistencia asistencia;
+    private Empleado empleado;
     
     @BeforeEach
     void setUp() {
         request = new ReporteRequestDTO();
         request.setFechaInicio(LocalDate.of(2025, 1, 15));
         request.setFechaFin(LocalDate.of(2025, 1, 15));
+        
+        empleado = new Empleado();
+        empleado.setId(1L);
+        empleado.setDni("12345678");
+        empleado.setNombres("Juan Carlos");
+        empleado.setApellidos("Pérez López");
+        empleado.setCargo("Desarrollador");
+        empleado.setArea("TI");
+        
+        asistencia = new Asistencia();
+        asistencia.setId(1L);
+        asistencia.setEmpleado(empleado);
+        asistencia.setFechaHora(LocalDateTime.of(2025, 1, 15, 8, 0));
+        asistencia.setTipo(TipoMarcacion.ENTRADA);
+        asistencia.setEstado(EstadoMarcacion.PUNTUAL);
+        asistencia.setObservaciones("Entrada puntual");
         
         reporteDTO = new ReporteAsistenciaDTO();
         reporteDTO.setId(1L);
@@ -69,8 +89,8 @@ class ReporteControllerTest {
     @WithMockUser(roles = "ADMIN")
     void debeObtenerReporteAsistencias() throws Exception {
         // Given
-        List<ReporteAsistenciaDTO> reportes = Arrays.asList(reporteDTO);
-        Page<ReporteAsistenciaDTO> page = new PageImpl<>(reportes, PageRequest.of(0, 20), 1);
+        List<Asistencia> asistencias = Arrays.asList(asistencia);
+        Page<Asistencia> page = new PageImpl<>(asistencias, PageRequest.of(0, 20), 1);
         
         when(reporteService.obtenerReporteAsistencias(any(ReporteRequestDTO.class), any()))
                 .thenReturn(page);

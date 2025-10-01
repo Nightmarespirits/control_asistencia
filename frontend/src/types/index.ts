@@ -64,7 +64,7 @@ export interface ReporteRequest {
   fechaInicio?: string; // Format: "YYYY-MM-DD"
   fechaFin?: string; // Format: "YYYY-MM-DD"
   empleadoId?: number;
-  tipo?: TipoMarcacion;
+  tipoMarcacion?: string;
   page?: number;
   size?: number;
 }

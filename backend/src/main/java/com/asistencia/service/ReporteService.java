@@ -36,15 +36,13 @@ public class ReporteService {
     @Autowired
     private AsistenciaRepository asistenciaRepository;
     
-    public Page<ReporteAsistenciaDTO> obtenerReporteAsistencias(ReporteRequestDTO request, Pageable pageable) {
-        Specification<Asistencia> spec = createSpecification(request);
-        Page<Asistencia> asistencias = asistenciaRepository.findAll(spec, pageable);
-        
-        return asistencias.map(this::convertToReporteDTO);
+    public Page<Asistencia> obtenerReporteAsistencias(ReporteRequestDTO request, Pageable pageable) {
+        Specification<Asistencia> spec = createSpecificationWithFetch(request);
+        return asistenciaRepository.findAll(spec, pageable);
     }
     
-    public List<ReporteAsistenciaDTO> obtenerReporteAsistencias(ReporteRequestDTO request) {
-        Specification<Asistencia> spec = createSpecification(request);
+    public List<ReporteAsistenciaDTO> obtenerReporteAsistenciasDTO(ReporteRequestDTO request) {
+        Specification<Asistencia> spec = createSpecificationWithFetch(request);
         List<Asistencia> asistencias = asistenciaRepository.findAll(spec);
         
         return asistencias.stream()
@@ -89,23 +87,66 @@ public class ReporteService {
         };
     }
     
+    private Specification<Asistencia> createSpecificationWithFetch(ReporteRequestDTO request) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            
+            // JOIN FETCH para cargar eagerly el empleado y evitar LazyInitializationException
+            root.fetch("empleado", jakarta.persistence.criteria.JoinType.INNER);
+            
+            // Filtro por rango de fechas
+            if (request.getFechaInicio() != null) {
+                LocalDateTime fechaInicioDateTime = request.getFechaInicio().atStartOfDay();
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("fechaHora"), fechaInicioDateTime));
+            }
+            
+            if (request.getFechaFin() != null) {
+                LocalDateTime fechaFinDateTime = request.getFechaFin().atTime(23, 59, 59);
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("fechaHora"), fechaFinDateTime));
+            }
+            
+            // Filtro por empleado
+            if (request.getEmpleadoId() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("empleado").get("id"), request.getEmpleadoId()));
+            }
+            
+            // Filtro por tipo de marcación
+            if (request.getTipoMarcacion() != null && !request.getTipoMarcacion().isEmpty()) {
+                try {
+                    TipoMarcacion tipo = TipoMarcacion.valueOf(request.getTipoMarcacion());
+                    predicates.add(criteriaBuilder.equal(root.get("tipo"), tipo));
+                } catch (IllegalArgumentException e) {
+                    // Ignorar tipo inválido
+                }
+            }
+            
+            // Ordenar por fecha descendente
+            query.orderBy(criteriaBuilder.desc(root.get("fechaHora")));
+            
+            // Para evitar duplicados cuando se usa fetch
+            query.distinct(true);
+            
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+    
     private ReporteAsistenciaDTO convertToReporteDTO(Asistencia asistencia) {
-        return new ReporteAsistenciaDTO(
-                asistencia.getId(),
-                asistencia.getEmpleado().getNombres(),
-                asistencia.getEmpleado().getApellidos(),
-                asistencia.getEmpleado().getDni(),
-                asistencia.getEmpleado().getCargo(),
-                asistencia.getEmpleado().getArea(),
-                asistencia.getFechaHora(),
-                asistencia.getTipo(),
-                asistencia.getEstado(),
-                asistencia.getObservaciones()
-        );
+        ReporteAsistenciaDTO dto = new ReporteAsistenciaDTO();
+        dto.setId(asistencia.getId());
+        dto.setEmpleadoNombres(asistencia.getEmpleado().getNombres());
+        dto.setEmpleadoApellidos(asistencia.getEmpleado().getApellidos());
+        dto.setEmpleadoDni(asistencia.getEmpleado().getDni());
+        dto.setEmpleadoCargo(asistencia.getEmpleado().getCargo());
+        dto.setEmpleadoArea(asistencia.getEmpleado().getArea());
+        dto.setFechaHora(asistencia.getFechaHora());
+        dto.setTipo(asistencia.getTipo());
+        dto.setEstado(asistencia.getEstado());
+        dto.setObservaciones(asistencia.getObservaciones());
+        return dto;
     }
     
     public byte[] generarReporteExcel(ReporteRequestDTO request) throws IOException {
-        List<ReporteAsistenciaDTO> datos = obtenerReporteAsistencias(request);
+        List<ReporteAsistenciaDTO> datos = obtenerReporteAsistenciasDTO(request);
         
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -159,7 +200,7 @@ public class ReporteService {
     }
     
     public byte[] generarReportePDF(ReporteRequestDTO request) throws IOException {
-        List<ReporteAsistenciaDTO> datos = obtenerReporteAsistencias(request);
+        List<ReporteAsistenciaDTO> datos = obtenerReporteAsistenciasDTO(request);
         
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             PdfWriter writer = new PdfWriter(outputStream);

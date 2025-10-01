@@ -83,17 +83,17 @@ class ReporteServiceTest {
         when(asistenciaRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
         
         // When
-        Page<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistencias(request, pageable);
+        Page<Asistencia> resultado = reporteService.obtenerReporteAsistencias(request, pageable);
         
         // Then
         assertNotNull(resultado);
         assertEquals(2, resultado.getContent().size());
         
-        ReporteAsistenciaDTO dto1 = resultado.getContent().get(0);
-        assertEquals("Juan Carlos", dto1.getEmpleadoNombres());
-        assertEquals("Pérez López", dto1.getEmpleadoApellidos());
-        assertEquals("12345678", dto1.getEmpleadoDni());
-        assertEquals(TipoMarcacion.ENTRADA, dto1.getTipo());
+        Asistencia asistencia = resultado.getContent().get(0);
+        assertEquals("Juan Carlos", asistencia.getEmpleado().getNombres());
+        assertEquals("Pérez López", asistencia.getEmpleado().getApellidos());
+        assertEquals("12345678", asistencia.getEmpleado().getDni());
+        assertEquals(TipoMarcacion.ENTRADA, asistencia.getTipo());
         
         verify(asistenciaRepository).findAll(any(Specification.class), eq(pageable));
     }
@@ -106,7 +106,7 @@ class ReporteServiceTest {
         when(asistenciaRepository.findAll(any(Specification.class))).thenReturn(asistencias);
         
         // When
-        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistencias(request);
+        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistenciasDTO(request);
         
         // Then
         assertNotNull(resultado);
@@ -163,7 +163,7 @@ class ReporteServiceTest {
         when(asistenciaRepository.findAll(any(Specification.class))).thenReturn(asistencias);
         
         // When
-        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistencias(request);
+        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistenciasDTO(request);
         
         // Then
         assertNotNull(resultado);
@@ -182,7 +182,7 @@ class ReporteServiceTest {
         when(asistenciaRepository.findAll(any(Specification.class))).thenReturn(asistencias);
         
         // When
-        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistencias(request);
+        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistenciasDTO(request);
         
         // Then
         assertNotNull(resultado);
@@ -201,7 +201,7 @@ class ReporteServiceTest {
         when(asistenciaRepository.findAll(any(Specification.class))).thenReturn(asistencias);
         
         // When
-        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistencias(request);
+        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistenciasDTO(request);
         
         // Then
         assertNotNull(resultado);

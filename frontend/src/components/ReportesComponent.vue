@@ -42,7 +42,7 @@
           </v-col>
           <v-col cols="12" md="3">
             <v-select
-              v-model="filtros.tipo"
+              v-model="filtros.tipoMarcacion"
               :items="tiposMarcacion"
               item-title="text"
               item-value="value"
@@ -98,8 +98,8 @@
     <v-card class="mt-4">
       <v-card-text>
         <v-data-table-server
-          v-model:items-per-page="itemsPerPage"
-          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :page="page"
           :headers="headers"
           :items="reportes"
           :items-length="totalItems"
@@ -108,15 +108,15 @@
           class="elevation-1"
           @update:options="actualizarOpciones"
         >
-          <template v-slot:item.empleado="{ item }">
+          <template #item.empleado="{ item }">
             {{ item.empleado.nombres }} {{ item.empleado.apellidos }}
           </template>
 
-          <template v-slot:item.fechaHora="{ item }">
+          <template #item.fechaHora="{ item }">
             {{ formatearFechaHora(item.fechaHora) }}
           </template>
 
-          <template v-slot:item.tipo="{ item }">
+          <template #item.tipo="{ item }">
             <v-chip
               :color="getColorTipo(item.tipo)"
               size="small"
@@ -126,7 +126,7 @@
             </v-chip>
           </template>
 
-          <template v-slot:item.estado="{ item }">
+          <template #item.estado="{ item }">
             <v-chip
               :color="getColorEstado(item.estado)"
               size="small"
@@ -136,7 +136,7 @@
             </v-chip>
           </template>
 
-          <template v-slot:item.observaciones="{ item }">
+          <template #item.observaciones="{ item }">
             <span v-if="item.observaciones" class="text-caption">
               {{ item.observaciones }}
             </span>
@@ -149,7 +149,7 @@
     <!-- Snackbar para mensajes -->
     <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="4000">
       {{ snackbar.message }}
-      <template v-slot:actions>
+      <template #actions>
         <v-btn variant="text" @click="snackbar.show = false"> Cerrar </v-btn>
       </template>
     </v-snackbar>
@@ -189,7 +189,7 @@ const filtros = ref<ReporteRequest>({
   fechaInicio: primerDiaMes.toISOString().split("T")[0],
   fechaFin: ultimoDiaMes.toISOString().split("T")[0],
   empleadoId: undefined,
-  tipo: undefined,
+  tipoMarcacion: undefined,
 });
 
 // Snackbar para mensajes
@@ -227,7 +227,7 @@ const mensajeNoData = computed(() => {
     (filtros.value.fechaInicio ||
       filtros.value.fechaFin ||
       filtros.value.empleadoId ||
-      filtros.value.tipo)
+      filtros.value.tipoMarcacion)
   ) {
     return "No se encontraron registros para los filtros aplicados";
   }
@@ -336,7 +336,7 @@ const limpiarFiltros = () => {
     fechaInicio: primerDiaMes.toISOString().split("T")[0],
     fechaFin: ultimoDiaMes.toISOString().split("T")[0],
     empleadoId: undefined,
-    tipo: undefined,
+    tipoMarcacion: undefined,
   };
   page.value = 1;
   buscarReportes();

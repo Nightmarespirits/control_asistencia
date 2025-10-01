@@ -79,18 +79,18 @@ class ReporteServiceIntegrationTest {
     @Test
     void debeObtenerReporteConFiltrosDeFecha() {
         // When
-        Page<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistencias(request, PageRequest.of(0, 10));
+        Page<Asistencia> resultado = reporteService.obtenerReporteAsistencias(request, PageRequest.of(0, 10));
         
         // Then
         assertNotNull(resultado);
         assertEquals(2, resultado.getContent().size());
         
-        ReporteAsistenciaDTO dto = resultado.getContent().get(0);
-        assertEquals("Juan Carlos", dto.getEmpleadoNombres());
-        assertEquals("Pérez López", dto.getEmpleadoApellidos());
-        assertEquals("12345678", dto.getEmpleadoDni());
-        assertEquals("Desarrollador", dto.getEmpleadoCargo());
-        assertEquals("TI", dto.getEmpleadoArea());
+        Asistencia asistencia = resultado.getContent().get(0);
+        assertEquals("Juan Carlos", asistencia.getEmpleado().getNombres());
+        assertEquals("Pérez López", asistencia.getEmpleado().getApellidos());
+        assertEquals("12345678", asistencia.getEmpleado().getDni());
+        assertEquals("Desarrollador", asistencia.getEmpleado().getCargo());
+        assertEquals("TI", asistencia.getEmpleado().getArea());
     }
     
     @Test
@@ -99,7 +99,7 @@ class ReporteServiceIntegrationTest {
         request.setEmpleadoId(empleado.getId());
         
         // When
-        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistencias(request);
+        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistenciasDTO(request);
         
         // Then
         assertNotNull(resultado);
@@ -117,7 +117,7 @@ class ReporteServiceIntegrationTest {
         request.setTipoMarcacion("ENTRADA");
         
         // When
-        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistencias(request);
+        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistenciasDTO(request);
         
         // Then
         assertNotNull(resultado);
@@ -159,7 +159,7 @@ class ReporteServiceIntegrationTest {
         request.setFechaFin(LocalDate.of(2025, 2, 1));
         
         // When
-        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistencias(request);
+        List<ReporteAsistenciaDTO> resultado = reporteService.obtenerReporteAsistenciasDTO(request);
         
         // Then
         assertNotNull(resultado);

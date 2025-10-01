@@ -2,6 +2,7 @@ package com.asistencia.controller;
 
 import com.asistencia.dto.ReporteAsistenciaDTO;
 import com.asistencia.dto.ReporteRequestDTO;
+import com.asistencia.entity.Asistencia;
 import com.asistencia.service.ReporteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,13 +29,13 @@ public class ReporteController {
     private ReporteService reporteService;
     
     @PostMapping("/asistencias")
-    public ResponseEntity<Page<ReporteAsistenciaDTO>> obtenerReporteAsistencias(
+    public ResponseEntity<Page<Asistencia>> obtenerReporteAsistencias(
             @Valid @RequestBody ReporteRequestDTO request,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         
         Pageable pageable = PageRequest.of(page, size);
-        Page<ReporteAsistenciaDTO> reporte = reporteService.obtenerReporteAsistencias(request, pageable);
+        Page<Asistencia> reporte = reporteService.obtenerReporteAsistencias(request, pageable);
         
         return ResponseEntity.ok(reporte);
     }

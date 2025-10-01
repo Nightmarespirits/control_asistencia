@@ -60,6 +60,7 @@ public class Empleado {
     private LocalDateTime fechaActualizacion;
     
     @OneToMany(mappedBy = "empleado", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<Asistencia> asistencias;
     
     // Constructors
