@@ -19,7 +19,7 @@ api.interceptors.request.use(
 
     // Log request in development
     if (import.meta.env?.DEV) {
-      console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`, config.data)
+      console.log(`Interceptor /services/api.ts ${config.method?.toUpperCase()} ${config.url}`, config.data)
     }
 
     return config
@@ -35,7 +35,7 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log successful responses in development
     if (import.meta.env?.DEV) {
-      console.log(`✅ ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data)
+      console.log(`::::DEBUGGING RESPONSE ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data)
     }
     return response
   },
@@ -47,7 +47,7 @@ api.interceptors.response.use(
       const { status, data } = error.response
       const errorMessage = (data as any)?.mensaje || (data as any)?.message || 'Error desconocido'
 
-      console.error(`❌ ${status} ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url}:`, errorMessage)
+      console.error(`::: DEBUGGING ERROR ${status} ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url}:`, errorMessage)
 
       // Handle 401 - Unauthorized (token refresh)
       if (status === 401 && !originalRequest._retry) {

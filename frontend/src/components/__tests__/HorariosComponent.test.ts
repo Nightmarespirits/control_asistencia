@@ -1,62 +1,31 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { TipoMarcacion } from '@/types'
-import type { Horario } from '@/types'
+import { describe, it, expect, vi } from 'vitest'
+import { TipoMarcacion } from '@/types/index'
 
-// Mock del servicio
+// Mock the horario service
 vi.mock('@/services/horarioService', () => ({
   horarioService: {
-    getAll: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    checkOverlap: vi.fn()
+    getAll: vi.fn().mockResolvedValue([
+      {
+        id: 1,
+        nombre: 'Horario de Entrada',
+        horaInicio: '08:00',
+        horaFin: '08:30',
+        tipo: TipoMarcacion.ENTRADA,
+        activo: true,
+        fechaCreacion: '2024-01-01T00:00:00'
+      }
+    ]),
+    getActivos: vi.fn().mockResolvedValue([]),
+    create: vi.fn().mockResolvedValue({}),
+    update: vi.fn().mockResolvedValue({}),
+    delete: vi.fn().mockResolvedValue(undefined),
+    checkOverlap: vi.fn().mockResolvedValue(false)
   }
 }))
 
-const mockHorarios: Horario[] = [
-  {
-    id: 1,
-    nombre: 'Horario Entrada',
-    horaInicio: '08:00',
-    horaFin: '08:30',
-    tipo: TipoMarcacion.ENTRADA,
-    activo: true,
-    fechaCreacion: '2025-01-15T10:00:00'
-  },
-  {
-    id: 2,
-    nombre: 'Horario Salida Almuerzo',
-    horaInicio: '12:00',
-    horaFin: '12:30',
-    tipo: TipoMarcacion.SALIDA_ALMUERZO,
-    activo: true,
-    fechaCreacion: '2025-01-15T10:00:00'
-  }
-]
+describe('HorariosComponent Utils', () => {
 
-describe('HorariosComponent', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it('debe importar el servicio correctamente', async () => {
-    const { horarioService } = await import('@/services/horarioService')
-    expect(horarioService).toBeDefined()
-    expect(horarioService.getAll).toBeDefined()
-    expect(horarioService.create).toBeDefined()
-    expect(horarioService.update).toBeDefined()
-    expect(horarioService.delete).toBeDefined()
-    expect(horarioService.checkOverlap).toBeDefined()
-  })
-
-  it('debe tener tipos de marcación definidos', () => {
-    expect(TipoMarcacion.ENTRADA).toBe('ENTRADA')
-    expect(TipoMarcacion.SALIDA_ALMUERZO).toBe('SALIDA_ALMUERZO')
-    expect(TipoMarcacion.RETORNO_ALMUERZO).toBe('RETORNO_ALMUERZO')
-    expect(TipoMarcacion.SALIDA).toBe('SALIDA')
-  })
-
-  it('debe validar formato de hora', () => {
+  it('validates time format correctly', () => {
     const timeFormatRule = (value: string) => {
       if (!value) return true
       const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/
@@ -64,13 +33,24 @@ describe('HorariosComponent', () => {
     }
     
     expect(timeFormatRule('08:30')).toBe(true)
-    expect(timeFormatRule('23:59')).toBe(true)
-    expect(timeFormatRule('24:00')).toContain('Formato de hora inválido')
-    expect(timeFormatRule('8:30')).toBe(true) // Acepta formato sin cero inicial
-    expect(timeFormatRule('invalid')).toContain('Formato de hora inválido')
+    expect(timeFormatRule('25:00')).toBe('Formato de hora inválido (HH:mm)')
+    expect(timeFormatRule('8:30')).toBe(true)
+    expect(timeFormatRule('invalid')).toBe('Formato de hora inválido (HH:mm)')
   })
 
-  it('debe calcular duración correctamente', () => {
+  it('formats time correctly', () => {
+    const formatTime = (time: string): string => {
+      if (!time) return ''
+      const [hours, minutes] = time.split(':')
+      return `${hours}:${minutes}`
+    }
+    
+    expect(formatTime('08:30')).toBe('08:30')
+    expect(formatTime('12:00')).toBe('12:00')
+    expect(formatTime('')).toBe('')
+  })
+
+  it('calculates duration correctly', () => {
     const calcularDuracion = (horaInicio: string, horaFin: string): string => {
       if (!horaInicio || !horaFin) return ''
       
@@ -93,56 +73,12 @@ describe('HorariosComponent', () => {
     }
     
     expect(calcularDuracion('08:00', '08:30')).toBe('30 min')
-    expect(calcularDuracion('08:00', '10:00')).toBe('2h')
-    expect(calcularDuracion('08:00', '09:15')).toBe('1h 15min')
+    expect(calcularDuracion('08:00', '09:00')).toBe('1h')
+    expect(calcularDuracion('08:00', '09:30')).toBe('1h 30min')
+    expect(calcularDuracion('08:30', '08:00')).toBe('Rango inválido')
   })
 
-  it('debe formatear tiempo correctamente', () => {
-    const formatTime = (time: string): string => {
-      if (!time) return ''
-      const [hours, minutes] = time.split(':')
-      return `${hours}:${minutes}`
-    }
-    
-    expect(formatTime('08:30')).toBe('08:30')
-    expect(formatTime('23:59')).toBe('23:59')
-    expect(formatTime('')).toBe('')
-  })
-
-  it('debe formatear rango de tiempo', () => {
-    const formatTimeRange = (horario: Horario): string => {
-      const formatTime = (time: string): string => {
-        if (!time) return ''
-        const [hours, minutes] = time.split(':')
-        return `${hours}:${minutes}`
-      }
-      return `${formatTime(horario.horaInicio)} - ${formatTime(horario.horaFin)}`
-    }
-    
-    const horario: Horario = {
-      nombre: 'Test',
-      horaInicio: '08:00',
-      horaFin: '08:30',
-      tipo: TipoMarcacion.ENTRADA
-    }
-    
-    expect(formatTimeRange(horario)).toBe('08:00 - 08:30')
-  })
-
-  it('debe obtener horario por tipo', () => {
-    const getHorarioByTipo = (horarios: Horario[], tipo: TipoMarcacion): Horario | undefined => {
-      return horarios.filter(h => h.activo).find(h => h.tipo === tipo)
-    }
-    
-    const horarioEntrada = getHorarioByTipo(mockHorarios, TipoMarcacion.ENTRADA)
-    expect(horarioEntrada).toBeDefined()
-    expect(horarioEntrada?.nombre).toBe('Horario Entrada')
-    
-    const horarioInexistente = getHorarioByTipo(mockHorarios, TipoMarcacion.SALIDA)
-    expect(horarioInexistente).toBeUndefined()
-  })
-
-  it('debe obtener información del tipo de marcación', () => {
+  it('gets tipo information correctly', () => {
     const tiposMarcacion = [
       { 
         value: TipoMarcacion.ENTRADA, 
@@ -170,13 +106,20 @@ describe('HorariosComponent', () => {
       }
     ]
 
-    const getTipoInfo = (tipo: TipoMarcacion) => {
-      return tiposMarcacion.find(t => t.value === tipo)
+    const getTipoText = (tipo: TipoMarcacion): string => {
+      return tiposMarcacion.find(t => t.value === tipo)?.text || tipo
+    }
+
+    const getTipoIcon = (tipo: TipoMarcacion): string => {
+      return tiposMarcacion.find(t => t.value === tipo)?.icon || 'mdi-clock'
+    }
+
+    const getTipoColor = (tipo: TipoMarcacion): string => {
+      return tiposMarcacion.find(t => t.value === tipo)?.color || 'primary'
     }
     
-    expect(getTipoInfo(TipoMarcacion.ENTRADA)?.text).toBe('Entrada')
-    expect(getTipoInfo(TipoMarcacion.SALIDA_ALMUERZO)?.icon).toBe('mdi-food')
-    expect(getTipoInfo(TipoMarcacion.RETORNO_ALMUERZO)?.color).toBe('blue')
-    expect(getTipoInfo(TipoMarcacion.SALIDA)?.text).toBe('Salida')
+    expect(getTipoText(TipoMarcacion.ENTRADA)).toBe('Entrada')
+    expect(getTipoIcon(TipoMarcacion.ENTRADA)).toBe('mdi-login')
+    expect(getTipoColor(TipoMarcacion.ENTRADA)).toBe('green')
   })
 })

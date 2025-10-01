@@ -30,7 +30,9 @@
             lg="3"
           >
             <v-card
-              :color="getHorarioByTipo(tipo.value) ? 'success' : 'grey-lighten-3'"
+              :color="
+                getHorarioByTipo(tipo.value) ? 'success' : 'grey-lighten-3'
+              "
               :variant="getHorarioByTipo(tipo.value) ? 'tonal' : 'outlined'"
               class="text-center"
             >
@@ -42,9 +44,7 @@
                 <div v-if="getHorarioByTipo(tipo.value)" class="text-h6">
                   {{ formatTimeRange(getHorarioByTipo(tipo.value)!) }}
                 </div>
-                <div v-else class="text-body-2 text-grey">
-                  No configurado
-                </div>
+                <div v-else class="text-body-2 text-grey">No configurado</div>
               </v-card-text>
             </v-card>
           </v-col>
@@ -65,34 +65,30 @@
         class="elevation-0"
         item-key="id"
       >
-        <template #item.tipo="{ item }">
-          <v-chip
-            :color="getTipoColor(item.tipo)"
-            size="small"
-            variant="tonal"
-          >
+        <template #[`item.tipo`]="{ item }">
+          <v-chip :color="getTipoColor(item.tipo)" size="small" variant="tonal">
             <v-icon start>{{ getTipoIcon(item.tipo) }}</v-icon>
             {{ getTipoText(item.tipo) }}
           </v-chip>
         </template>
 
-        <template #item.horario="{ item }">
+        <template #[`item.horario`]="{ item }">
           <span class="font-weight-medium">
             {{ formatTimeRange(item) }}
           </span>
         </template>
 
-        <template #item.activo="{ item }">
+        <template #[`item.activo`]="{ item }">
           <v-chip
             :color="item.activo ? 'success' : 'error'"
             size="small"
             variant="tonal"
           >
-            {{ item.activo ? 'Activo' : 'Inactivo' }}
+            {{ item.activo ? "Activo" : "Inactivo" }}
           </v-chip>
         </template>
 
-        <template #item.actions="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-btn
             icon="mdi-pencil"
             size="small"
@@ -115,7 +111,7 @@
       <v-card>
         <v-card-title>
           <span class="text-h5">
-            {{ editando ? 'Editar Horario' : 'Nuevo Horario' }}
+            {{ editando ? "Editar Horario" : "Nuevo Horario" }}
           </span>
         </v-card-title>
 
@@ -197,9 +193,10 @@
               <v-card-text class="text-center">
                 <v-icon class="mr-2">mdi-eye</v-icon>
                 <strong>Vista previa:</strong>
-                {{ horarioForm.nombre || 'Nuevo horario' }} - 
-                {{ formatTime(horarioForm.horaInicio) }} a {{ formatTime(horarioForm.horaFin) }}
-                <br>
+                {{ horarioForm.nombre || "Nuevo horario" }} -
+                {{ formatTime(horarioForm.horaInicio) }} a
+                {{ formatTime(horarioForm.horaFin) }}
+                <br />
                 <small class="text-medium-emphasis">
                   Duración: {{ calcularDuracion() }}
                 </small>
@@ -210,10 +207,7 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn
-            text="Cancelar"
-            @click="cerrarDialogo"
-          />
+          <v-btn text="Cancelar" @click="cerrarDialogo" />
           <v-btn
             color="primary"
             text="Guardar"
@@ -228,22 +222,19 @@
     <!-- Diálogo de confirmación para eliminar -->
     <v-dialog v-model="dialogoEliminar" max-width="400px">
       <v-card>
-        <v-card-title class="text-h5">
-          Confirmar eliminación
-        </v-card-title>
+        <v-card-title class="text-h5"> Confirmar eliminación </v-card-title>
         <v-card-text>
-          ¿Está seguro que desea eliminar el horario "{{ horarioAEliminar?.nombre }}"?
-          <br><br>
+          ¿Está seguro que desea eliminar el horario "{{
+            horarioAEliminar?.nombre
+          }}"? <br /><br />
           <small class="text-medium-emphasis">
-            Esta acción desactivará el horario pero mantendrá los registros históricos.
+            Esta acción desactivará el horario pero mantendrá los registros
+            históricos.
           </small>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn
-            text="Cancelar"
-            @click="dialogoEliminar = false"
-          />
+          <v-btn text="Cancelar" @click="dialogoEliminar = false" />
           <v-btn
             color="error"
             text="Eliminar"
@@ -255,314 +246,316 @@
     </v-dialog>
 
     <!-- Snackbar para mensajes -->
-    <v-snackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      :timeout="4000"
-    >
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="4000">
       {{ snackbar.message }}
       <template #actions>
-        <v-btn
-          variant="text"
-          @click="snackbar.show = false"
-        >
-          Cerrar
-        </v-btn>
+        <v-btn variant="text" @click="snackbar.show = false"> Cerrar </v-btn>
       </template>
     </v-snackbar>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { horarioService } from '@/services/horarioService'
-import type { Horario } from '@/types'
-import { TipoMarcacion } from '@/types'
+import { ref, reactive, computed, onMounted } from "vue";
+import { horarioService } from "@/services/horarioService";
+import type { Horario } from "@/types";
+import { TipoMarcacion } from "@/types";
 
 // Estado reactivo
-const horarios = ref<Horario[]>([])
-const loading = ref(false)
-const dialogo = ref(false)
-const dialogoEliminar = ref(false)
-const editando = ref(false)
-const guardando = ref(false)
-const eliminando = ref(false)
-const formularioValido = ref(false)
-const mensajeSolapamiento = ref('')
-const horarioAEliminar = ref<Horario | null>(null)
+const horarios = ref<Horario[]>([]);
+const loading = ref(false);
+const dialogo = ref(false);
+const dialogoEliminar = ref(false);
+const editando = ref(false);
+const guardando = ref(false);
+const eliminando = ref(false);
+const formularioValido = ref(false);
+const mensajeSolapamiento = ref("");
+const horarioAEliminar = ref<Horario | null>(null);
 
 // Referencias del formulario
-const form = ref()
+const form = ref();
 
 // Formulario reactivo
-const horarioForm = reactive<Omit<Horario, 'id'>>({
-  nombre: '',
-  horaInicio: '',
-  horaFin: '',
+const horarioForm = reactive<Omit<Horario, "id">>({
+  nombre: "",
+  horaInicio: "",
+  horaFin: "",
   tipo: TipoMarcacion.ENTRADA,
-  activo: true
-})
+  activo: true,
+});
 
 // Snackbar para mensajes
 const snackbar = reactive({
   show: false,
-  message: '',
-  color: 'success'
-})
+  message: "",
+  color: "success",
+});
 
 // Configuración de la tabla
 const headers = [
-  { title: 'Nombre', key: 'nombre', sortable: true },
-  { title: 'Tipo', key: 'tipo', sortable: true },
-  { title: 'Horario', key: 'horario', sortable: false },
-  { title: 'Estado', key: 'activo', sortable: true },
-  { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
-]
+  { title: "Nombre", key: "nombre", sortable: true },
+  { title: "Tipo", key: "tipo", sortable: true },
+  { title: "Horario", key: "horario", sortable: false },
+  { title: "Estado", key: "activo", sortable: true },
+  { title: "Acciones", key: "actions", sortable: false, width: "120px" },
+];
 
 // Tipos de marcación con iconos
 const tiposMarcacion = [
-  { 
-    value: TipoMarcacion.ENTRADA, 
-    text: 'Entrada', 
-    icon: 'mdi-login',
-    color: 'green'
+  {
+    value: TipoMarcacion.ENTRADA,
+    text: "Entrada",
+    icon: "mdi-login",
+    color: "green",
   },
-  { 
-    value: TipoMarcacion.SALIDA_ALMUERZO, 
-    text: 'Salida a almuerzo', 
-    icon: 'mdi-food',
-    color: 'orange'
+  {
+    value: TipoMarcacion.SALIDA_ALMUERZO,
+    text: "Salida a almuerzo",
+    icon: "mdi-food",
+    color: "orange",
   },
-  { 
-    value: TipoMarcacion.RETORNO_ALMUERZO, 
-    text: 'Retorno de almuerzo', 
-    icon: 'mdi-food-off',
-    color: 'blue'
+  {
+    value: TipoMarcacion.RETORNO_ALMUERZO,
+    text: "Retorno de almuerzo",
+    icon: "mdi-food-off",
+    color: "blue",
   },
-  { 
-    value: TipoMarcacion.SALIDA, 
-    text: 'Salida', 
-    icon: 'mdi-logout',
-    color: 'red'
-  }
-]
+  {
+    value: TipoMarcacion.SALIDA,
+    text: "Salida",
+    icon: "mdi-logout",
+    color: "red",
+  },
+];
 
 // Reglas de validación
 const rules = {
-  required: (value: string) => !!value || 'Este campo es obligatorio',
-  maxLength: (max: number) => (value: string) => 
+  required: (value: string) => !!value || "Este campo es obligatorio",
+  maxLength: (max: number) => (value: string) =>
     !value || value.length <= max || `Máximo ${max} caracteres`,
   timeFormat: (value: string) => {
-    if (!value) return true
-    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/
-    return timeRegex.test(value) || 'Formato de hora inválido (HH:mm)'
+    if (!value) return true;
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return timeRegex.test(value) || "Formato de hora inválido (HH:mm)";
   },
   timeRange: (value: string) => {
-    if (!value || !horarioForm.horaInicio) return true
-    return horarioForm.horaInicio < value || 'La hora de fin debe ser posterior a la hora de inicio'
-  }
-}
+    if (!value || !horarioForm.horaInicio) return true;
+    return (
+      horarioForm.horaInicio < value ||
+      "La hora de fin debe ser posterior a la hora de inicio"
+    );
+  },
+};
 
 // Computed properties
-const horariosActivos = computed(() => 
-  horarios.value.filter(h => h.activo)
-)
+const horariosActivos = computed(() => horarios.value.filter((h) => h.activo));
 
 // Métodos
 const cargarHorarios = async () => {
   try {
-    loading.value = true
-    horarios.value = await horarioService.getAll()
+    loading.value = true;
+    horarios.value = await horarioService.getAll();
   } catch (error) {
-    mostrarMensaje('Error al cargar horarios', 'error')
-    console.error('Error:', error)
+    mostrarMensaje("Error al cargar horarios", "error");
+    console.error("Error:", error);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const abrirDialogoNuevo = () => {
-  editando.value = false
-  resetearFormulario()
-  dialogo.value = true
-}
+  editando.value = false;
+  resetearFormulario();
+  dialogo.value = true;
+};
 
 const editarHorario = (horario: Horario) => {
-  editando.value = true
+  editando.value = true;
   Object.assign(horarioForm, {
     nombre: horario.nombre,
     horaInicio: horario.horaInicio,
     horaFin: horario.horaFin,
     tipo: horario.tipo,
-    activo: horario.activo
-  })
-  dialogo.value = true
-}
+    activo: horario.activo,
+  });
+  dialogo.value = true;
+};
 
 const resetearFormulario = () => {
   Object.assign(horarioForm, {
-    nombre: '',
-    horaInicio: '',
-    horaFin: '',
+    nombre: "",
+    horaInicio: "",
+    horaFin: "",
     tipo: TipoMarcacion.ENTRADA,
-    activo: true
-  })
-  mensajeSolapamiento.value = ''
+    activo: true,
+  });
+  mensajeSolapamiento.value = "";
   if (form.value) {
-    form.value.resetValidation()
+    form.value.resetValidation();
   }
-}
+};
 
 const cerrarDialogo = () => {
-  dialogo.value = false
-  resetearFormulario()
-}
+  dialogo.value = false;
+  resetearFormulario();
+};
 
 const onTipoChange = () => {
   // Limpiar mensaje de solapamiento al cambiar tipo
-  mensajeSolapamiento.value = ''
+  mensajeSolapamiento.value = "";
   // Sugerir nombre basado en el tipo
   if (!horarioForm.nombre) {
-    const tipoInfo = tiposMarcacion.find(t => t.value === horarioForm.tipo)
+    const tipoInfo = tiposMarcacion.find((t) => t.value === horarioForm.tipo);
     if (tipoInfo) {
-      horarioForm.nombre = `Horario ${tipoInfo.text}`
+      horarioForm.nombre = `Horario ${tipoInfo.text}`;
     }
   }
-}
+};
 
 const validarRangoHorario = async () => {
   if (!horarioForm.horaInicio || !horarioForm.horaFin || !horarioForm.tipo) {
-    mensajeSolapamiento.value = ''
-    return
+    mensajeSolapamiento.value = "";
+    return;
   }
 
   try {
-    const excludeId = editando.value ? 
-      horarios.value.find(h => h.tipo === horarioForm.tipo)?.id : undefined
-    
-    const hasOverlap = await horarioService.checkOverlap(horarioForm, excludeId)
-    
+    const excludeId = editando.value
+      ? horarios.value.find((h) => h.tipo === horarioForm.tipo)?.id
+      : undefined;
+
+    const hasOverlap = await horarioService.checkOverlap(
+      horarioForm,
+      excludeId
+    );
+
     if (hasOverlap) {
-      mensajeSolapamiento.value = 
-        `Ya existe un horario que se solapa con este rango para el tipo ${getTipoText(horarioForm.tipo)}`
+      mensajeSolapamiento.value = `Ya existe un horario que se solapa con este rango para el tipo ${getTipoText(
+        horarioForm.tipo
+      )}`;
     } else {
-      mensajeSolapamiento.value = ''
+      mensajeSolapamiento.value = "";
     }
   } catch (error) {
-    console.error('Error validando solapamiento:', error)
+    console.error("Error validando solapamiento:", error);
   }
-}
+};
 
 const guardarHorario = async () => {
-  if (!form.value.validate() || mensajeSolapamiento.value) return
+  if (!form.value.validate() || mensajeSolapamiento.value) return;
 
   try {
-    guardando.value = true
-    
+    guardando.value = true;
+
     if (editando.value) {
-      const horarioExistente = horarios.value.find(h => h.tipo === horarioForm.tipo)
+      const horarioExistente = horarios.value.find(
+        (h) => h.tipo === horarioForm.tipo
+      );
       if (horarioExistente?.id) {
-        await horarioService.update(horarioExistente.id, horarioForm)
-        mostrarMensaje('Horario actualizado correctamente', 'success')
+        await horarioService.update(horarioExistente.id, horarioForm);
+        mostrarMensaje("Horario actualizado correctamente", "success");
       }
     } else {
-      await horarioService.create(horarioForm)
-      mostrarMensaje('Horario creado correctamente', 'success')
+      await horarioService.create(horarioForm);
+      mostrarMensaje("Horario creado correctamente", "success");
     }
-    
-    await cargarHorarios()
-    cerrarDialogo()
+
+    await cargarHorarios();
+    cerrarDialogo();
   } catch (error: any) {
-    const mensaje = error.response?.data?.mensaje || 'Error al guardar horario'
-    mostrarMensaje(mensaje, 'error')
-    console.error('Error:', error)
+    const mensaje = error.response?.data?.mensaje || "Error al guardar horario";
+    mostrarMensaje(mensaje, "error");
+    console.error("Error:", error);
   } finally {
-    guardando.value = false
+    guardando.value = false;
   }
-}
+};
 
 const confirmarEliminar = (horario: Horario) => {
-  horarioAEliminar.value = horario
-  dialogoEliminar.value = true
-}
+  horarioAEliminar.value = horario;
+  dialogoEliminar.value = true;
+};
 
 const eliminarHorario = async () => {
-  if (!horarioAEliminar.value?.id) return
+  if (!horarioAEliminar.value?.id) return;
 
   try {
-    eliminando.value = true
-    await horarioService.delete(horarioAEliminar.value.id)
-    mostrarMensaje('Horario eliminado correctamente', 'success')
-    await cargarHorarios()
-    dialogoEliminar.value = false
-    horarioAEliminar.value = null
+    eliminando.value = true;
+    await horarioService.delete(horarioAEliminar.value.id);
+    mostrarMensaje("Horario eliminado correctamente", "success");
+    await cargarHorarios();
+    dialogoEliminar.value = false;
+    horarioAEliminar.value = null;
   } catch (error: any) {
-    const mensaje = error.response?.data?.mensaje || 'Error al eliminar horario'
-    mostrarMensaje(mensaje, 'error')
-    console.error('Error:', error)
+    const mensaje =
+      error.response?.data?.mensaje || "Error al eliminar horario";
+    mostrarMensaje(mensaje, "error");
+    console.error("Error:", error);
   } finally {
-    eliminando.value = false
+    eliminando.value = false;
   }
-}
+};
 
 const mostrarMensaje = (message: string, color: string) => {
-  snackbar.message = message
-  snackbar.color = color
-  snackbar.show = true
-}
+  snackbar.message = message;
+  snackbar.color = color;
+  snackbar.show = true;
+};
 
 // Funciones de utilidad
 const getHorarioByTipo = (tipo: TipoMarcacion): Horario | undefined => {
-  return horariosActivos.value.find(h => h.tipo === tipo)
-}
+  return horariosActivos.value.find((h) => h.tipo === tipo);
+};
 
 const getTipoText = (tipo: TipoMarcacion): string => {
-  return tiposMarcacion.find(t => t.value === tipo)?.text || tipo
-}
+  return tiposMarcacion.find((t) => t.value === tipo)?.text || tipo;
+};
 
 const getTipoIcon = (tipo: TipoMarcacion): string => {
-  return tiposMarcacion.find(t => t.value === tipo)?.icon || 'mdi-clock'
-}
+  return tiposMarcacion.find((t) => t.value === tipo)?.icon || "mdi-clock";
+};
 
 const getTipoColor = (tipo: TipoMarcacion): string => {
-  return tiposMarcacion.find(t => t.value === tipo)?.color || 'primary'
-}
+  return tiposMarcacion.find((t) => t.value === tipo)?.color || "primary";
+};
 
 const formatTime = (time: string): string => {
-  if (!time) return ''
-  const [hours, minutes] = time.split(':')
-  return `${hours}:${minutes}`
-}
+  if (!time) return "";
+  const [hours, minutes] = time.split(":");
+  return `${hours}:${minutes}`;
+};
 
 const formatTimeRange = (horario: Horario): string => {
-  return `${formatTime(horario.horaInicio)} - ${formatTime(horario.horaFin)}`
-}
+  return `${formatTime(horario.horaInicio)} - ${formatTime(horario.horaFin)}`;
+};
 
 const calcularDuracion = (): string => {
-  if (!horarioForm.horaInicio || !horarioForm.horaFin) return ''
-  
-  const [startHours, startMinutes] = horarioForm.horaInicio.split(':').map(Number)
-  const [endHours, endMinutes] = horarioForm.horaFin.split(':').map(Number)
-  
-  const startTotalMinutes = startHours * 60 + startMinutes
-  const endTotalMinutes = endHours * 60 + endMinutes
-  
-  const durationMinutes = endTotalMinutes - startTotalMinutes
-  
-  if (durationMinutes <= 0) return 'Rango inválido'
-  
-  const hours = Math.floor(durationMinutes / 60)
-  const minutes = durationMinutes % 60
-  
-  if (hours === 0) return `${minutes} min`
-  if (minutes === 0) return `${hours}h`
-  return `${hours}h ${minutes}min`
-}
+  if (!horarioForm.horaInicio || !horarioForm.horaFin) return "";
+
+  const [startHours, startMinutes] = horarioForm.horaInicio
+    .split(":")
+    .map(Number);
+  const [endHours, endMinutes] = horarioForm.horaFin.split(":").map(Number);
+
+  const startTotalMinutes = startHours * 60 + startMinutes;
+  const endTotalMinutes = endHours * 60 + endMinutes;
+
+  const durationMinutes = endTotalMinutes - startTotalMinutes;
+
+  if (durationMinutes <= 0) return "Rango inválido";
+
+  const hours = Math.floor(durationMinutes / 60);
+  const minutes = durationMinutes % 60;
+
+  if (hours === 0) return `${minutes} min`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}min`;
+};
 
 // Lifecycle
 onMounted(() => {
-  cargarHorarios()
-})
+  cargarHorarios();
+});
 </script>
 
 <style scoped>

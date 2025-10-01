@@ -5,31 +5,31 @@ export const horarioService = {
   // Obtener todos los horarios
   async getAll(): Promise<Horario[]> {
     const response = await api.get('/admin/horarios');
-    return response.data;
+    return response.data.data;
   },
 
   // Obtener horarios activos
   async getActivos(): Promise<Horario[]> {
     const response = await api.get('/admin/horarios/activos');
-    return response.data;
+    return response.data.data;
   },
 
   // Obtener horario por ID
   async getById(id: number): Promise<Horario> {
     const response = await api.get(`/admin/horarios/${id}`);
-    return response.data;
+    return response.data.data;
   },
 
   // Crear nuevo horario
   async create(horario: Omit<Horario, 'id'>): Promise<Horario> {
     const response = await api.post('/admin/horarios', horario);
-    return response.data;
+    return response.data.data;
   },
 
   // Actualizar horario
   async update(id: number, horario: Partial<Horario>): Promise<Horario> {
     const response = await api.put(`/admin/horarios/${id}`, horario);
-    return response.data;
+    return response.data.data;
   },
 
   // Eliminar horario (soft delete)
